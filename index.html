@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Алтай Translator · Sacha & Viola </title>
+<title>Алтай Translator · Lexique de voyage</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -435,7 +435,7 @@ html[lang="fa"] .toast { font-family: 'Vazirmatn', sans-serif; }
 
 <header>
   <div class="header-inner">
-    <div class="brand">Алтай<b>·</b>Translator</div>
+    <div class="brand">Алтай<b>·</b>Translator - by Sacha</div>
     <div class="lang-wrap">
       <button class="lang-btn" id="langBtn">
         <span id="langCurrent">FR</span> ▼
@@ -716,6 +716,21 @@ function speak(text) {
   window.speechSynthesis.speak(utt);
 }
 
+// Detect source language from text
+function detectSourceLang(text) {
+  // Cyrillic
+  if (/[\u0400-\u04FF]/.test(text)) return 'ru';
+  // Persian/Arabic script
+  if (/[\u0600-\u06FF]/.test(text)) return 'fa';
+  // French markers (common accented chars + words)
+  if (/[àâçéèêëîïôûùüÿœæ]/i.test(text) ||
+      /\b(le|la|les|un|une|des|est|et|ou|mais|où|pour|avec|sans|dans)\b/i.test(text)) {
+    return 'fr';
+  }
+  // Default English
+  return 'en';
+}
+
 async function translateText() {
   var input = document.getElementById('userInput').value.trim();
   if (!input) return;
@@ -733,33 +748,30 @@ async function translateText() {
   btn.disabled = true;
 
   try {
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: 'Translate the following text into Russian. The user input may be in French, English, Russian, or Persian. Return ONLY a JSON object with two fields: "ru" (the Russian translation in Cyrillic) and "ph" (the phonetic transcription in Latin script, easy to pronounce for French speakers). No other text, no markdown, no explanation.\n\nText: ' + input
-        }]
-      })
-    });
+    // Detect source language and translate to Russian via MyMemory (free, no API key)
+    var srcLang = detectSourceLang(input);
+    var langPair = srcLang + '|ru';
+    var url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(input) + '&langpair=' + langPair;
 
+    var response = await fetch(url);
     var data = await response.json();
-    var raw = data.content[0].text.trim().replace(/```json|```/g, '').trim();
-    var result = JSON.parse(raw);
+
+    if (!data.responseData || !data.responseData.translatedText) {
+      throw new Error('No translation returned');
+    }
+
+    var translated = data.responseData.translatedText;
 
     output.className = 'output-text';
     output.style.color = '';
-    output.textContent = result.ru;
-    phonetic.textContent = result.ph ? '[' + result.ph + ']' : '';
+    output.textContent = translated;
+    phonetic.textContent = '';
     actions.style.display = 'flex';
 
     document.getElementById('copyBtn').onclick = function() {
-      navigator.clipboard.writeText(result.ru).then(showToast);
+      navigator.clipboard.writeText(translated).then(showToast);
     };
-    document.getElementById('speakBtn').onclick = function() { speak(result.ru); };
+    document.getElementById('speakBtn').onclick = function() { speak(translated); };
 
   } catch(e) {
     var errorMsg = { fr: 'Erreur. Réessayez.', en: 'Error. Try again.', ru: 'Ошибка. Попробуйте снова.', fa: 'خطا. دوباره تلاش کنید.' }[currentLang];
