@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Алтай Translator · Altaï</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;700&family=Martian+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+<style>
+/* ========== DESIGN: FIELD NOTEBOOK meets SOVIET CONSTRUCTIVISM ========== */
+:root {
+  --void: #0d0d0d;
+  --paper: #f0e6cc;
+  --paper-2: #e8d9b5;
+  --rust: #c4401a;
+  --rust-2: #9e3314;
+  --gold: #d4a23a;
+  --frost: #7ab8d4;
+  --ink: #0d0d0d;
+  --muted: #5a4e3a;
+  --line: rgba(212,162,58,.25);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  background: var(--void);
+  color: var(--paper);
+  font-family: 'Lora', Georgia, serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Noise grain overlay */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: .6;
+  mix-blend-mode: overlay;
+}
+
+/* ========== HEADER ========== */
+header {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--void);
+  border-bottom: 1px solid var(--line);
+  padding: 0 20px;
+}
+.header-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  gap: 16px;
+}
+.logo {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.logo span { color: var(--rust); }
+
+/* Lang selector — top right */
+.lang-pills {
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,.06);
+  padding: 4px;
+  border-radius: 999px;
+}
+.lang-pill {
+  padding: 5px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  font-family: 'Martian Mono', monospace;
+  font-size: 11px;
+  color: rgba(240,230,204,.5);
+  cursor: pointer;
+  letter-spacing: .08em;
+  transition: all .2s;
+}
+.lang-pill.active {
+  background: var(--rust);
+  color: var(--paper);
+}
+
+/* Direction toggle */
+.dir-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Martian Mono', monospace;
+  font-size: 11px;
+  color: rgba(240,230,204,.5);
+}
+.dir-btn {
+  border: 1px solid rgba(212,162,58,.3);
+  background: transparent;
+  color: var(--gold);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-family: 'Martian Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: .05em;
+}
+.dir-btn:hover { background: rgba(212,162,58,.15); }
+
+/* ========== MAIN ========== */
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 30px 20px 80px;
+  position: relative; z-index: 1;
+}
+
+/* ========== HERO TEXT ========== */
+.hero-text {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.hero-text h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 300;
+  font-size: clamp(28px, 6vw, 52px);
+  letter-spacing: -.02em;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.hero-text h1 span { color: var(--rust); }
+.hero-text p {
+  font-family: 'Martian Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(240,230,204,.4);
+}
+
+/* ========== FREE TRANSLATION BOX ========== */
+.translate-box {
+  background: rgba(240,230,204,.04);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  margin-bottom: 40px;
+  overflow: hidden;
+}
+.translate-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  font-family: 'Martian Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.translate-header .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--rust);
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.translate-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 600px) {
+  .translate-body { grid-template-columns: 1fr; }
+}
+
+.translate-input-side {
+  padding: 18px;
+  border-right: 1px solid var(--line);
+  position: relative;
+}
+@media (max-width: 600px) {
+  .translate-input-side { border-right: none; border-bottom: 1px solid var(--line); }
+}
+.translate-output-side {
+  padding: 18px;
+  position: relative;
+  min-height: 160px;
+}
+
+.input-lang-label {
+  font-family: 'Martian Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: rgba(240,230,204,.35);
+  margin-bottom: 10px;
+}
+
+textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--paper);
+  font-family: 'Lora', serif;
+  font-size: 18px;
+  line-height: 1.5;
+  resize: none;
+  min-height: 100px;
+  caret-color: var(--rust);
+}
+textarea::placeholder {
+  color: rgba(240,230,204,.2);
+  font-style: italic;
+}
+
+.translate-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.btn-translate {
+  background: var(--rust);
+  color: var(--paper);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 2px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .2s;
+}
+.btn-translate:hover { background: var(--rust-2); }
+.btn-translate:disabled { opacity: .5; cursor: default; }
+.btn-small {
+  background: transparent;
+  border: 1px solid rgba(240,230,204,.15);
+  color: rgba(240,230,204,.5);
+  padding: 8px 12px;
+  border-radius: 2px;
+  font-family: 'Martian Mono', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: .05em;
+}
+.btn-small:hover { border-color: var(--gold); color: var(--gold); }
+
+.output-lang-label {
+  font-family: 'Martian Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: rgba(240,230,204,.35);
+  margin-bottom: 10px;
+}
+.output-text {
+  font-family: 'Lora', serif;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--gold);
+  min-height: 60px;
+}
+.output-text.loading {
+  color: rgba(212,162,58,.3);
+  font-style: italic;
+  font-size: 14px;
+}
+.phonetic {
+  margin-top: 8px;
+  font-family: 'Martian Mono', monospace;
+  font-size: 12px;
+  color: var(--frost);
+  letter-spacing: .05em;
+}
+.output-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ========== CATEGORIES NAV ========== */
+.cat-nav {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.cat-btn {
+  background: transparent;
+  border: 1px solid rgba(240,230,204,.12);
+  color: rgba(240,230,204,.5);
+  padding: 7px 14px;
+  border-radius: 2px;
+  font-family: 'Martian Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .2s;
+}
+.cat-btn:hover { border-color: rgba(196,64,26,.5); color: var(--paper); }
+.cat-btn.active {
+  background: rgba(196,64,26,.15);
+  border-color: var(--rust);
+  color: var(--paper);
+}
+
+/* ========== PHRASE CARDS ========== */
+.phrases-section-title {
+  font-family: 'Martian Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: rgba(240,230,204,.3);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.card {
+  background: rgba(240,230,204,.04);
+  border: 1px solid rgba(240,230,204,.08);
+  border-left: 3px solid var(--rust);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+.card:hover {
+  background: rgba(196,64,26,.08);
+  border-color: rgba(196,64,26,.4);
+  border-left-color: var(--rust);
+}
+.card.active {
+  background: rgba(196,64,26,.12);
+  border-color: var(--rust);
+}
+
+.card-src {
+  font-family: 'Lora', serif;
+  font-size: 15px;
+  color: var(--paper);
+  margin-bottom: 5px;
+  line-height: 1.35;
+}
+.card-ru {
+  font-family: 'Lora', serif;
+  font-size: 16px;
+  color: var(--gold);
+  margin-bottom: 4px;
+  line-height: 1.35;
+}
+.card-phonetic {
+  font-family: 'Martian Mono', monospace;
+  font-size: 11px;
+  color: var(--frost);
+  letter-spacing: .03em;
+}
+.card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.card-btn {
+  background: transparent;
+  border: 1px solid rgba(240,230,204,.12);
+  color: rgba(240,230,204,.4);
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-family: 'Martian Mono', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.card-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* Urgency card */
+.card.urgent { border-left-color: var(--frost); }
+.card.urgent .card-ru { color: var(--frost); }
+
+/* ========== CORNER DECO ========== */
+.corner-ru {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 80px;
+  font-weight: 700;
+  color: rgba(196,64,26,.07);
+  letter-spacing: -.05em;
+  pointer-events: none;
+  line-height: 1;
+  z-index: 0;
+  user-select: none;
+}
+
+/* ========== RESPONSVE ========== */
+@media (max-width: 600px) {
+  .hero-text h1 { font-size: 28px; }
+  .cards { grid-template-columns: 1fr; }
+  .logo { font-size: 11px; }
+}
+
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb { background: var(--rust); border-radius: 2px; }
+</style>
+
+</head>
+<body>
+
+<div class="corner-ru">РУ</div>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">Алтай<span>·</span>Translator</div>
+    <div class="lang-pills">
+      <button class="lang-pill active" data-ui-lang="fr">FR</button>
+      <button class="lang-pill" data-ui-lang="en">EN</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="hero-text">
+    <h1><span id="heroLine1">Parler</span> en Altaï</h1>
+    <p id="heroSub">Lexique de voyage · traduction instantanée · FR · EN · RU</p>
+  </div>
+
+  <!-- FREE TRANSLATION -->
+
+  <div class="translate-box">
+    <div class="translate-header">
+      <span class="dot"></span>
+      <span id="aiLabel">Traduction IA — écris n'importe quoi</span>
+    </div>
+    <div class="translate-body">
+      <div class="translate-input-side">
+        <div class="input-lang-label" id="inputLangLabel">Français ou Anglais</div>
+        <textarea id="userInput" placeholder="Où est la cascade ?" rows="4"></textarea>
+        <div class="translate-actions">
+          <button class="btn-translate" id="translateBtn">
+            <span id="translateBtnLabel">Traduire →</span>
+          </button>
+          <button class="btn-small" id="clearBtn">✕ <span id="clearLabel">Effacer</span></button>
+        </div>
+      </div>
+      <div class="translate-output-side">
+        <div class="output-lang-label">Русский</div>
+        <div class="output-text" id="outputText" style="color:rgba(212,162,58,.2);font-style:italic;font-size:14px;">
+          <span id="outputPlaceholder">La traduction apparaît ici...</span>
+        </div>
+        <div class="phonetic" id="outputPhonetic"></div>
+        <div class="output-actions" id="outputActions" style="display:none">
+          <button class="btn-small" id="copyBtn">📋 <span id="copyLabel">Copier</span></button>
+          <button class="btn-small" id="speakBtn">🔊 <span id="speakLabel">Écouter</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORY NAV -->
+
+  <div class="cat-nav" id="catNav">
+    <button class="cat-btn active" data-cat="all"><span class="cat-label" data-key="all">Tout</span></button>
+    <button class="cat-btn" data-cat="route"><span class="cat-label" data-key="route">🚗 Route</span></button>
+    <button class="cat-btn" data-cat="hotel"><span class="cat-label" data-key="hotel">🛏 Hôtel</span></button>
+    <button class="cat-btn" data-cat="nature"><span class="cat-label" data-key="nature">🏔 Nature</span></button>
+    <button class="cat-btn" data-cat="food"><span class="cat-label" data-key="food">🍽 Repas</span></button>
+    <button class="cat-btn" data-cat="shop"><span class="cat-label" data-key="shop">🛒 Shopping</span></button>
+    <button class="cat-btn" data-cat="emergency"><span class="cat-label" data-key="emergency">🆘 Urgence</span></button>
+  </div>
+
+  <div class="phrases-section-title" id="phrasesTitle">PHRASES UTILES</div>
+  <div class="cards" id="cards"></div>
+</main>
+
+<script>
+// ============ DATA ============
+var UI = {
+  fr: {
+    heroLine1: "Parler",
+    heroSub: "Lexique de voyage · traduction instantanée · FR · EN · RU",
+    aiLabel: "Traduction IA — écris n'importe quoi",
+    inputLangLabel: "Français ou Anglais",
+    translateBtnLabel: "Traduire →",
+    clearLabel: "Effacer",
+    outputPlaceholder: "La traduction apparaît ici...",
+    copyLabel: "Copier",
+    speakLabel: "Écouter",
+    phrasesTitle: "PHRASES UTILES",
+    copied: "Copié ✓",
+    cats: { all: "Tout", route: "🚗 Route", hotel: "🛏 Hôtel", nature: "🏔 Nature", food: "🍽 Repas", shop: "🛒 Shopping", emergency: "🆘 Urgence" }
+  },
+  en: {
+    heroLine1: "Speak",
+    heroSub: "Travel phrasebook · instant translation · FR · EN · RU",
+    aiLabel: "AI Translation — type anything",
+    inputLangLabel: "French or English",
+    translateBtnLabel: "Translate →",
+    clearLabel: "Clear",
+    outputPlaceholder: "Translation appears here...",
+    copyLabel: "Copy",
+    speakLabel: "Listen",
+    phrasesTitle: "USEFUL PHRASES",
+    copied: "Copied ✓",
+    cats: { all: "All", route: "🚗 Road", hotel: "🛏 Hotel", nature: "🏔 Nature", food: "🍽 Food", shop: "🛒 Shopping", emergency: "🆘 Emergency" }
+  }
+};
+
+var phrases = [
+  // ROUTE
+  { cat: "route", fr: "Où est la cascade ?", en: "Where is the waterfall?", ru: "Где водопад?", ph: "Gdye vodopád?" },
+  { cat: "route", fr: "Où est l'hôtel ?", en: "Where is the hotel?", ru: "Где гостиница?", ph: "Gdye gostinitsa?" },
+  { cat: "route", fr: "Quelle est la route pour Seminsky ?", en: "Which road goes to Seminsky?", ru: "Как проехать на Семинский перевал?", ph: "Kak proyékhat' na Semínskiy pereval?" },
+  { cat: "route", fr: "Combien de kilomètres ?", en: "How many kilometres?", ru: "Сколько километров?", ph: "Skólko kilométrov?" },
+  { cat: "route", fr: "Y a-t-il une station essence ?", en: "Is there a petrol station?", ru: "Есть заправка?", ph: "Yest' zapravka?" },
+  { cat: "route", fr: "La route est-elle praticable ?", en: "Is the road passable?", ru: "Дорога проходима?", ph: "Doroga prokhódima?" },
+  { cat: "route", fr: "Pouvez-vous nous aider ? Notre voiture est en panne.", en: "Can you help us? Our car broke down.", ru: "Помогите, у нас сломалась машина.", ph: "Pomogíte, u nas slomálas' mashína." },
+
+  // HOTEL
+  { cat: "hotel", fr: "Nous avons une réservation.", en: "We have a reservation.", ru: "У нас есть бронь.", ph: "U nas yest' bron'." },
+  { cat: "hotel", fr: "À quelle heure est le petit-déjeuner ?", en: "What time is breakfast?", ru: "В котором часу завтрак?", ph: "V kotórom chasú závtrak?" },
+  { cat: "hotel", fr: "Y a-t-il du wifi ?", en: "Is there wifi?", ru: "Есть вай-фай?", ph: "Yest' vay-fay?" },
+  { cat: "hotel", fr: "Acceptez-vous les espèces ?", en: "Do you accept cash?", ru: "Принимаете наличные?", ph: "Prinimaete nalichnye?" },
+  { cat: "hotel", fr: "Pouvez-vous nous réveiller à 7h ?", en: "Can you wake us at 7am?", ru: "Разбудите нас в семь утра.", ph: "Razbudíte nas v sem' utRa." },
+
+  // NATURE
+  { cat: "nature", fr: "Le sentier est-il difficile ?", en: "Is the trail difficult?", ru: "Тропа сложная?", ph: "Tropá slózhnaya?" },
+  { cat: "nature", fr: "Combien de temps à pied ?", en: "How long on foot?", ru: "Сколько идти пешком?", ph: "Skólko idtí peshkóm?" },
+  { cat: "nature", fr: "C'est magnifique !", en: "It's magnificent!", ru: "Это великолепно!", ph: "Éto velikolépno!" },
+  { cat: "nature", fr: "Y a-t-il des ours ici ?", en: "Are there bears here?", ru: "Здесь есть медведи?", ph: "Zdes' yest' medvédi?" },
+  { cat: "nature", fr: "Quel est ce lac ?", en: "What is this lake?", ru: "Как называется это озеро?", ph: "Kak nazyvayetsya éto ózero?" },
+  { cat: "nature", fr: "La confluence Chuya-Katun, s'il vous plaît.", en: "The Chuya-Katun confluence, please.", ru: "Слияние Чуи и Катуни, пожалуйста.", ph: "Sliyániye Chui i Katúni, pozhaluysta." },
+
+  // FOOD
+  { cat: "food", fr: "Une table pour deux, s'il vous plaît.", en: "A table for two, please.", ru: "Столик на двоих, пожалуйста.", ph: "Stólik na dvoíkh, pozhaluysta." },
+  { cat: "food", fr: "Qu'est-ce que vous recommandez ?", en: "What do you recommend?", ru: "Что вы рекомендуете?", ph: "Chto vy rekomendúyete?" },
+  { cat: "food", fr: "L'addition, s'il vous plaît.", en: "The bill, please.", ru: "Счёт, пожалуйста.", ph: "Shchot, pozhaluysta." },
+  { cat: "food", fr: "C'est délicieux !", en: "It's delicious!", ru: "Вкусно!", ph: "Vkusno!" },
+  { cat: "food", fr: "De l'eau, s'il vous plaît.", en: "Water, please.", ru: "Воду, пожалуйста.", ph: "Vodu, pozhaluysta." },
+
+  // SHOPPING
+  { cat: "shop", fr: "Combien ça coûte ?", en: "How much does it cost?", ru: "Сколько стоит?", ph: "Skólko stoit?" },
+  { cat: "shop", fr: "C'est trop cher.", en: "It's too expensive.", ru: "Слишком дорого.", ph: "Slíshkom dórogo." },
+  { cat: "shop", fr: "Je prends ça.", en: "I'll take this.", ru: "Я возьму это.", ph: "Ya voz'mú éto." },
+  { cat: "shop", fr: "Avez-vous de la monnaie ?", en: "Do you have change?", ru: "Есть сдача?", ph: "Yest' sdácha?" },
+
+  // EMERGENCY
+  { cat: "emergency", urgent: true, fr: "Appelez le 112 !", en: "Call 112!", ru: "Вызовите 112!", ph: "Vyzovíte sto dvenádtsat'!" },
+  { cat: "emergency", urgent: true, fr: "J'ai besoin d'un médecin.", en: "I need a doctor.", ru: "Мне нужен врач.", ph: "Mnye núzhen vrach." },
+  { cat: "emergency", urgent: true, fr: "Nous sommes perdus.", en: "We are lost.", ru: "Мы заблудились.", ph: "My zablúdilis'." },
+  { cat: "emergency", urgent: true, fr: "J'ai perdu mon passeport.", en: "I lost my passport.", ru: "Я потерял паспорт.", ph: "Ya poteryál pasport." },
+  { cat: "emergency", urgent: true, fr: "Où est l'hôpital le plus proche ?", en: "Where is the nearest hospital?", ru: "Где ближайшая больница?", ph: "Gdye blizhayshaya bol'nítsa?" },
+];
+
+// ============ STATE ============
+var currentLang = 'fr';
+var currentCat = 'all';
+
+// ============ RENDER ============
+function setUILang(lang) {
+  currentLang = lang;
+  var u = UI[lang];
+  document.getElementById('heroLine1').textContent = u.heroLine1;
+  document.getElementById('heroSub').textContent = u.heroSub;
+  document.getElementById('aiLabel').textContent = u.aiLabel;
+  document.getElementById('inputLangLabel').textContent = u.inputLangLabel;
+  document.getElementById('translateBtnLabel').textContent = u.translateBtnLabel;
+  document.getElementById('clearLabel').textContent = u.clearLabel;
+  document.getElementById('outputPlaceholder').textContent = u.outputPlaceholder;
+  document.getElementById('copyLabel').textContent = u.copyLabel;
+  document.getElementById('speakLabel').textContent = u.speakLabel;
+  document.getElementById('phrasesTitle').textContent = u.phrasesTitle;
+  document.getElementById('userInput').placeholder = lang === 'fr' ? 'Où est la cascade ?' : 'Where is the waterfall?';
+
+  // Update category labels
+  document.querySelectorAll('.cat-label').forEach(function(el) {
+    var key = el.getAttribute('data-key');
+    if (u.cats[key]) el.textContent = u.cats[key];
+  });
+
+  // Update lang pills
+  document.querySelectorAll('.lang-pill').forEach(function(p) {
+    p.classList.toggle('active', p.getAttribute('data-ui-lang') === lang);
+  });
+
+  renderCards();
+}
+
+function renderCards() {
+  var container = document.getElementById('cards');
+  var lang = currentLang;
+  var filtered = phrases.filter(function(p) {
+    return currentCat === 'all' || p.cat === currentCat;
+  });
+
+  container.innerHTML = '';
+  filtered.forEach(function(p) {
+    var card = document.createElement('div');
+    card.className = 'card' + (p.urgent ? ' urgent' : '');
+
+    card.innerHTML =
+      '<div class="card-src">' + (lang === 'fr' ? p.fr : p.en) + '</div>' +
+      '<div class="card-ru">' + p.ru + '</div>' +
+      '<div class="card-phonetic">[' + p.ph + ']</div>' +
+      '<div class="card-actions">' +
+        '<button class="card-btn copy-btn">📋 ' + UI[lang].copyLabel + '</button>' +
+        '<button class="card-btn speak-btn">🔊 ' + UI[lang].speakLabel + '</button>' +
+      '</div>';
+
+    // Copy
+    card.querySelector('.copy-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      navigator.clipboard.writeText(p.ru).then(function() {
+        var b = card.querySelector('.copy-btn');
+        b.textContent = '✓ ' + UI[lang].copied;
+        setTimeout(function() { b.textContent = '📋 ' + UI[lang].copyLabel; }, 1500);
+      }).catch(function() {
+        prompt('Copiez :', p.ru);
+      });
+    });
+
+    // Speak
+    card.querySelector('.speak-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      speak(p.ru);
+    });
+
+    container.appendChild(card);
+  });
+}
+
+// ============ SPEECH ============
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'ru-RU';
+  utt.rate = 0.85;
+  window.speechSynthesis.speak(utt);
+}
+
+// ============ AI TRANSLATION ============
+async function translateText() {
+  var input = document.getElementById('userInput').value.trim();
+  if (!input) return;
+
+  var output = document.getElementById('outputText');
+  var phonetic = document.getElementById('outputPhonetic');
+  var actions = document.getElementById('outputActions');
+  var btn = document.getElementById('translateBtn');
+
+  output.style.color = 'rgba(212,162,58,.3)';
+  output.style.fontStyle = 'italic';
+  output.style.fontSize = '14px';
+  output.innerHTML = '<span id="outputPlaceholder">' + (currentLang === 'fr' ? 'Traduction en cours...' : 'Translating...') + '</span>';
+  phonetic.textContent = '';
+  actions.style.display = 'none';
+  btn.disabled = true;
+
+  try {
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: 'Translate the following French or English text into Russian. Return ONLY a JSON object with two fields: "ru" (the Russian translation in Cyrillic) and "ph" (the phonetic transcription in Latin script, easy to pronounce for French speakers). No other text, no markdown, no explanation.\n\nText: ' + input
+        }]
+      })
+    });
+
+    var data = await response.json();
+    var raw = data.content[0].text.trim().replace(/```json|```/g, '').trim();
+    var result = JSON.parse(raw);
+
+    output.style.color = 'var(--gold)';
+    output.style.fontStyle = 'normal';
+    output.style.fontSize = '20px';
+    output.textContent = result.ru;
+    phonetic.textContent = result.ph ? '[' + result.ph + ']' : '';
+    actions.style.display = 'flex';
+
+    document.getElementById('copyBtn').onclick = function() {
+      navigator.clipboard.writeText(result.ru).then(function() {
+        document.getElementById('copyLabel').textContent = currentLang === 'fr' ? 'Copié ✓' : 'Copied ✓';
+        setTimeout(function() { document.getElementById('copyLabel').textContent = UI[currentLang].copyLabel; }, 1500);
+      });
+    };
+    document.getElementById('speakBtn').onclick = function() { speak(result.ru); };
+
+  } catch(e) {
+    output.style.color = 'rgba(196,64,26,.6)';
+    output.textContent = currentLang === 'fr' ? 'Erreur. Réessayez.' : 'Error. Try again.';
+  }
+
+  btn.disabled = false;
+}
+
+// ============ EVENT LISTENERS ============
+
+// UI Language
+document.querySelectorAll('.lang-pill').forEach(function(p) {
+  p.addEventListener('click', function() {
+    setUILang(p.getAttribute('data-ui-lang'));
+  });
+});
+
+// Category
+document.getElementById('catNav').addEventListener('click', function(e) {
+  var btn = e.target.closest('.cat-btn');
+  if (!btn) return;
+  currentCat = btn.getAttribute('data-cat');
+  document.querySelectorAll('.cat-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderCards();
+});
+
+// Translate button
+document.getElementById('translateBtn').addEventListener('click', translateText);
+
+// Enter key in textarea
+document.getElementById('userInput').addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') translateText();
+});
+
+// Clear
+document.getElementById('clearBtn').addEventListener('click', function() {
+  document.getElementById('userInput').value = '';
+  var output = document.getElementById('outputText');
+  output.style.color = 'rgba(212,162,58,.2)';
+  output.style.fontStyle = 'italic';
+  output.style.fontSize = '14px';
+  output.innerHTML = '<span id="outputPlaceholder">' + UI[currentLang].outputPlaceholder + '</span>';
+  document.getElementById('outputPhonetic').textContent = '';
+  document.getElementById('outputActions').style.display = 'none';
+});
+
+// ============ INIT ============
+renderCards();
+</script>
+
+</body>
+</html>
